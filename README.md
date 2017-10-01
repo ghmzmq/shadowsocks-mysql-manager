@@ -9,6 +9,7 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 # Requirements:
 ## 1.php5.6+(zts)
 ## 2.pthread
+## 3.shadowsocks-python
 
 # Steps to install php-zts
 ## 0. yum install gcc libxml2 libxml2-devel
