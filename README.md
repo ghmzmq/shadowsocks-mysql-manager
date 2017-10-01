@@ -11,7 +11,7 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 ## 2.pthread
 ## 3.shadowsocks-python
 
-# Steps to install php-zts
+# Steps to install php-zts & pthreads
 ## 0. yum install gcc libxml2 libxml2-devel
 ## 1. wget php.tar.gz(From php.net)
 ## 2. tar zxvf php.tar.gz && cd php
