@@ -2,41 +2,53 @@
 namespace SSMysqlManager\utils;
 use LogLevel;
 class Logger{
-    protected static $logFile;
+    protected $logFile;
 
+    public static $logger = null;
+
+	public function __construct($logFile){
+		if(static::$logger instanceof Logger){
+			throw new \RuntimeException("MainLogger has been already created");
+		}
+		static::$logger = $this;
+		touch($logFile);
+		$this->logFile = $logFile;
+	}
+    
+    public static function getLogger(){
+		return static::$logger;
+	}
+    
 	public function emergency($message){
-		self::send($message, "EMERGENCY", TextFormat::RED);
+		$this->send($message, "EMERGENCY", TextFormat::RED);
 	}
 
 	public function alert($message){
-		self::send($message, "ALERT", TextFormat::RED);
+		$this->send($message, "ALERT", TextFormat::RED);
 	}
 
 	public function critical($message){
-		self::send($message, "CRITICAL", TextFormat::RED);
+		$this->send($message, "CRITICAL", TextFormat::RED);
 	}
 
 	public function error($message){
-		self::send($message, "ERROR", TextFormat::DARK_RED);
+		$this->send($message, "ERROR", TextFormat::DARK_RED);
 	}
 
 	public function warning($message){
-		self::send($message, "WARNING", TextFormat::YELLOW);
+		$this->send($message, "WARNING", TextFormat::YELLOW);
 	}
 
 	public function notice($message){
-		self::send($message, "NOTICE", TextFormat::AQUA);
+		$this->send($message, "NOTICE", TextFormat::AQUA);
 	}
 
 	public function info($message){
-		self::send($message, "INFO", TextFormat::WHITE);
+		$this->send($message, "INFO", TextFormat::WHITE);
 	}
 
 	public function debug($message){
-		if(self::logDebug === false){
-			return;
-		}
-		self::send($message, "DEBUG", TextFormat::GRAY);
+		$this->send($message, "DEBUG", TextFormat::GRAY);
 	}
     
     protected function send($message, $prefix, $color){
@@ -50,13 +62,13 @@ class Logger{
 		}else{
 			echo $message . PHP_EOL;
 		}
-        self::logfile($cleanMessage);
+        $this->logfile($cleanMessage);
 	}
     
     public function logfile($message){
-		$logResource = fopen(self::$logFile, "a+b");
+		$logResource = fopen($this->logFile, "a+b");
 		if(!is_resource($logResource)){
-			self::error("Couldn't open log file");
+			$this->error("Couldn't open log file");
 		}
         fwrite($logResource, $message);
         fwrite($logResource, "\r\n");
@@ -64,6 +76,6 @@ class Logger{
 	}
     
     public static function setfile($file){
-        self::$logFile = $file;
+        $this->logFile = $file;
     }
 }
