@@ -4,7 +4,8 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 ## Progress 30%
 ## Please edit the config in config.php first
 
-## The traffic module is in progress
+## The traffic module is done
+## The support for v2ray is in progress
 
 # Requirements:
 ## 1.php5.6+(zts)

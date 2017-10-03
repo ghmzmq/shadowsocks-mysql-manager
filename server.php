@@ -12,7 +12,7 @@ namespace SSMysqlManager{
     require('utils/Logger.php');
     require('command/Command.php');
     require('service/MysqlManager.php');
-    require('service/PortManager.php');
+    require('service/SSPortManager.php');
 	ini_set("allow_url_fopen", 1);
     ini_set("date.timezone", "UTC");
     Terminal::init();
@@ -27,8 +27,6 @@ namespace SSMysqlManager{
 	}
     ThreadManager::init();
     $manager = new MysqlManager($logger);
-    
-    $logger->info("Stopping Server");
     
     switch(ServerType){
         case "ss":

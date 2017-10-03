@@ -7,6 +7,8 @@ define('DB_HOST', 'localhost');//数据库IP/域名
 
 define('ServerType', 'ss');//ss/ssr
 define('method', 'aes-128-ctr');
+define('trafficrate', '1');//流量倍率
+define('debugmode', false);//是否开启debug模式
 /*Not support yet
 define('protocol', 'origin');
 define('obfuscation', 'plain');

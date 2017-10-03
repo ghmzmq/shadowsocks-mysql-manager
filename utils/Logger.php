@@ -48,7 +48,9 @@ class Logger{
 	}
 
 	public function debug($message){
-		$this->send($message, "DEBUG", TextFormat::GRAY);
+        if(debugmode){
+            $this->send($message, "DEBUG", TextFormat::GRAY);
+        }
 	}
     
     protected function send($message, $prefix, $color){

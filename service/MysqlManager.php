@@ -5,7 +5,7 @@ use SSMysqlManager\utils\Terminal;
 use SSMysqlManager\utils\TextFormat;
 use SSMysqlManager\utils\Logger;
 use SSMysqlManager\command\Command;
-use SSMysqlManager\service\PortManager;
+use SSMysqlManager\service\SSPortManager;
 use SSMysqlManager\Thread;
 
 class MysqlManager{
@@ -48,6 +48,7 @@ class MysqlManager{
 	}
    
     public function shutdown(){
+        $this->getlogger()->info("Stopping Server");
         $this->console->shutdown();
         $this->PortManager->shutdown();
 		$this->isRunning = false;
@@ -114,7 +115,16 @@ class MysqlManager{
         $logger->info("SSMysqlManager Started!");
         $this->console = new Command($logger);
         $socket = socket_create( AF_INET, SOCK_DGRAM, SOL_UDP );
-        $this->PortManager = new PortManager($this,$logger,$socket);
+        switch(ServerType){
+            case "ss":
+                $this->PortManager = new SSPortManager($this,$logger,$socket);
+                break;
+            default:
+                $this->getLogger()->critical("Please set a ServerType in config.php");
+                $this->getServer()->getConsole()->Addline('stop');
+                return;
+                break;
+        }
         $logger->info("Console Started!");
         $this->start();
     }
@@ -144,7 +154,6 @@ class MysqlManager{
 				try{
 					time_sleep_until($next);
 				}catch(\Throwable $e){
-					//Sometimes $next is less than the current time. High load?
 				}
 			}
 		}
@@ -204,5 +213,107 @@ class MysqlManager{
 		return true;
 	}
 
-      
+    public function ManageIptableRules($ports,$type){
+        foreach($ports as $res){
+            switch($type){
+                case "add":
+                    $intcpcommand = "iptables -A INPUT -p tcp --dport " . $res['port'];
+                    $ottcpcommand = "iptables -A OUTPUT -p tcp --sport " . $res['port'];
+                    $inudpcommand = "iptables -A INPUT -p udp --dport " . $res['port'];
+                    $otudpcommand = "iptables -A OUTPUT -p udp --sport " . $res['port'];
+                    break;
+                case "del":
+                    $intcpcommand = "iptables -D INPUT -p tcp --dport " . $res['port'];
+                    $ottcpcommand = "iptables -D OUTPUT -p tcp --sport " . $res['port'];
+                    $inudpcommand = "iptables -D INPUT -p udp --dport " . $res['port'];
+                    $otudpcommand = "iptables -D OUTPUT -p udp --sport " . $res['port'];
+                    break;
+                default:
+                    break;
+            }
+            `$intcpcommand`;
+            `$inudpcommand`;
+            `$ottcpcommand`;
+            `$otudpcommand`;
+            $this->logger->debug("Rule For Port " . $res['port'] . " Done!");
+        }
+    }
+    
+    public function PraseIptables($type){
+        switch($type){
+            case "input":
+                $file = `iptables -nvx -L INPUT`;
+                break;
+            case "output":
+                $file = `iptables -nvx -L OUTPUT`;
+                break;
+            default:
+                return; 
+        }
+        $file = explode("\n", trim($file));
+        $file = array_splice($file,2);
+        $successarray = array();
+        foreach($file as $fi){
+            $fii = explode(" ", $fi);
+            $newfi = array();
+            foreach($fii as $fi){
+                if($fi !=  ""){
+                    $newfi[] = $fi;
+                }
+            }
+            $successarray[] = $newfi;
+        }
+        return $successarray;
+    }
+    
+    public function getUpdateData($iarray){
+        $retu = array();
+        foreach($iarray as $array){
+            preg_match_all('/(\d{5}(\.\d+)?)/is',$array[9],$port);
+            $port = $port[0][0];
+            if($port){
+                $transfer = $array[1];
+            }
+            if(!isset($retu[$port])){
+                $retu[$port] = array(
+                    "port" => $port,
+                    "transfer" => $transfer
+                );
+            }else{
+                $retu[$port]['transfer'] = $retu[$port]['transfer'] + $transfer;
+            }
+        }
+        return $retu;
+    }
+    
+    public function PraseMysql($in,$out){
+        $mysql = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        if(!$mysql){
+            $this->getLogger()->critical("Can't connect to MYSQL Server");
+            $this->getServer()->getConsole()->Addline('stop');
+        }
+        foreach($in as $pp){
+            $this->getLogger()->debug("Port " . $pp['port'] . " Uploaded " . $pp['transfer'] . " bytes");
+            $sql = "UPDATE `user` SET t=".time().", u=u+".($pp['transfer']*trafficrate)." WHERE port=" .$pp['port'];
+            $result = $mysql->query($sql);
+            if(!$result){
+                $this->getLogger()->critical("Update Port " . $pp['port'] . " Failed");
+            }
+        }
+        foreach($out as $pp){
+            $this->getLogger()->debug("Port " . $pp['port'] . " downloaded " . $pp['transfer'] . " bytes");
+            $sql = "UPDATE `user` SET t=".time().", d=d+".($pp['transfer']*trafficrate)." WHERE port=" .$pp['port'];
+            $result = $mysql->query($sql);
+            if(!$result){
+                $this->getLogger()->critical("Update Port " . $pp['port'] . " Failed");
+            }
+        }
+        return true;
+    }
+    
+    public function ClearIptables(){
+        $command = "iptables -Z";
+        `$command`;
+    }
+    
 }
