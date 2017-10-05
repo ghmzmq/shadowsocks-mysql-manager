@@ -11,9 +11,21 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 * 1.php5.6+(zts)
 * 2.pthread
 * 3.shadowsocks-python
+* 4.gcc libxml2 libxml2-devel m4 autoconf
 
-# Steps to install php-zts & pthreads
-* 0. yum install gcc libxml2 libxml2-devel
+# Usage:
+* 1. edit config.php
+* 2. php server.php or /usr/local/php-zts/bin/php server.php
+
+## Steps to install php-zts & pthreads
+### Centos:
+* yum install gcc libxml2 libxml2-devel m4 autoconf
+* sudo sh installphp.sh
+### Ubuntu
+* apt-get install gcc libxml2 libxml2-devel m4 autoconf
+* sudo sh installphp.sh
+## Or you can also make by yourself:
+* 0. install gcc libxml2 libxml2-devel m4 autoconf
 * 1. wget php.tar.gz(From php.net)
 * 2. tar zxvf php.tar.gz && cd php
 * 3. ./configure --prefix=/usr/local/php-zts --enable-sockets --enable-pcntl --enable-maintainer-zts --enable-sysvmsg --enable-mbstring --with-mysql --with-mysqli --with-mysql-sock --with-pdo-mysql
@@ -28,9 +40,4 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 * 11. edit /usr/local/php-zts/lib/php.ini and add "extension=pthreads.so" to it
 * 12. run /usr/local/php-zts/bin/php -m to check if there has pthreads
 * 13. Done!
-## Or you can also:
-* sudo sh installphp.sh
 
-# Usage:
-* 1. edit config.php
-* 2. php server.php
