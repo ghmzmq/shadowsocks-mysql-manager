@@ -139,6 +139,17 @@ class SSPortManager extends Thread{
                     socket_sendto($socket, $json, $len, 0, '0.0.0.0', 6001);
                     $this->Socketrev($socket);
                 }
+                if(isset($resulte[$res['port']]) and $resulte[$res['port']]['passwd'] != $res['passwd']){
+                    $this->getLogger()->info("Detected Password Change,Port: ".$res['port']);
+                    $json = $this->getJson($res['port'],$res['passwd'],"del");
+                    $len = strlen($json);
+                    socket_sendto($socket, $json, $len, 0, '0.0.0.0', 6001);
+                    $this->Socketrev($socket);
+                    $json = $this->getJson($res['port'],$res['passwd'],"add");
+                    $len = strlen($json);
+                    socket_sendto($socket, $json, $len, 0, '0.0.0.0', 6001);
+                    $this->Socketrev($socket);
+                }
             }
         }
         return json_encode($resulte,true);
