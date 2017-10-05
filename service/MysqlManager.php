@@ -163,8 +163,23 @@ class MysqlManager{
 		if(!Terminal::hasFormattingCodes()){
 			return;
 		}
-
-		echo "\x1b]0;SSMysqlManager\x07";
+        
+        $inarray = $this->PraseIptables("input");
+        $ina = 0;
+        $ports = 0;
+        foreach ($inarray as $in){
+            $ina = $ina + $in[1];
+            $ports++;
+        }
+        $ports = $ports / 2;
+        $otarray = $this->PraseIptables("output");
+        $ota = 0;
+        foreach ($otarray as $ot){
+            $ota = $ota + $ot[1];
+        }
+        $ina = floor($ina / 1048576);
+        $ota = floor($ota / 1048576);
+		echo "\x1b]0;SSMysqlManager | Ports: ".$ports." | U: ".$ina."m | D: ".$ota."m \x07";
 	}
     
     private function tick(){

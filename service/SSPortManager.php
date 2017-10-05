@@ -119,6 +119,7 @@ class SSPortManager extends Thread{
                     if($trafficused < $res['transfer_enable']){
                         $this->getLogger()->info("New Port Detected,Port: ".$res['port']);
                         $json = $this->getJson($res['port'],$res['passwd'],"add");
+                        $this->getServer()->ManageIptableRules(array($res['port']),'add');
                         if(!debugmode){
                             $this->getLogger()->info("Opening " . $res['port']);
                         }else{
@@ -131,6 +132,7 @@ class SSPortManager extends Thread{
                 }
                 if(isset($resulte[$res['port']]) and $trafficused > $res['transfer_enable']){
                     $this->getLogger()->info("Detected Overused Port: ".$res['port']);
+                    $this->getServer()->ManageIptableRules(array($res['port']),'del');
                     unset($resulte[$res['port']]);  
                     $json = $this->getJson($res['port'],$res['passwd'],"del");
                     $len = strlen($json);
