@@ -44,9 +44,10 @@ class SSPortManager extends Thread{
                 }
                 $uasql = "Select * FROM `user` WHERE `enable` = 1";
                 $result = $mysql->query($uasql);
+                mysqli_close($mysql);
                 $results = array();
                 while($row = mysqli_fetch_assoc($result)){
-                    $results[] = $row;
+                    $results[$row['port']] = $row;
                 }
                 if(!empty($results)){
                     $this->getLogger()->info("Starting Server");
@@ -70,11 +71,7 @@ class SSPortManager extends Thread{
                     $this->getServer()->ManageIptableRules($results,'add');
                     $this->getLogger()->info("Adding Ports");
                     foreach($results as $res){
-                        $json = array(
-                            'server_port' => (int)$res['port'],
-                            'password' => $res['passwd']
-                        );
-                        $json = 'add:'.json_encode($json,true);
+                        $json = $this->getJson($res['port'],$res['passwd'],"add");
                         if(!debugmode){
                             $this->getLogger()->info("Opening " . $res['port']);
                         }else{
@@ -87,20 +84,81 @@ class SSPortManager extends Thread{
                 }
                 $this->status = true;
             }else{
-                $this->tick ++;
-                if($this->tick == 15){
-                    $this->tick = 0;
-                    $getarray = $this->getServer()->PraseIptables('input');
-                    $inresults = $this->getServer()->getUpdateData($getarray);
-                    $getarray = $this->getServer()->PraseIptables('output');
-                    $otresults = $this->getServer()->getUpdateData($getarray);
-                    $this->getServer()->ClearIptables();
-                    $this->getServer()->PraseMysql($inresults,$otresults);
-                    $this->getLogger()->info("Get Traffic Done!");
+                if(!$this->shutdown){
+                    $this->tick ++;
+                    if($this->tick == 15){
+                        $this->tick = 0;
+                        $this->getServer()->CheckStatus();
+                        $this->results = $this->CheckNewAccountAndOutdateAccount($this->results);
+                        $this->getLogger()->info("Get Traffic Done!");
+                    }
+                    sleep(1);
                 }
-                sleep(1);
             }
         }
+    }
+    
+    public function CheckNewAccountAndOutdateAccount($results){
+        $resulte = json_decode($results,true);
+        $mysql = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        if(!$mysql){
+            $this->getLogger()->critical("Can't connect to MYSQL Server");
+        }
+        $uasql = "Select * FROM `user` WHERE `enable` = 1";
+        $result = $mysql->query($uasql);
+        mysqli_close($mysql);
+        $results = array();
+        while($row = mysqli_fetch_assoc($result)){
+            $results[] = $row;
+        }
+        $socket = $this->socket;
+        if(!empty($results)){
+            foreach($results as $res){
+                $trafficused = $res['u'] + $res['d'];
+                if(!isset($resulte[$res['port']])){
+                    if($trafficused < $res['transfer_enable']){
+                        $this->getLogger()->info("New Port Detected,Port: ".$res['port']);
+                        $json = $this->getJson($res['port'],$res['passwd'],"add");
+                        if(!debugmode){
+                            $this->getLogger()->info("Opening " . $res['port']);
+                        }else{
+                            $this->getLogger()->info("Opening " . $res['port'] . ",Method " . method . " Password " . $res['passwd']);
+                        }
+                        $len = strlen($json);
+                        socket_sendto($socket, $json, $len, 0, '0.0.0.0', 6001);
+                        $this->Socketrev($socket);
+                    }
+                }
+                if(isset($resulte[$res['port']]) and $trafficused > $res['transfer_enable']){
+                    $this->getLogger()->info("Detected Overused Port: ".$res['port']);
+                    unset($resulte[$res['port']]);  
+                    $json = $this->getJson($res['port'],$res['passwd'],"del");
+                    $len = strlen($json);
+                    socket_sendto($socket, $json, $len, 0, '0.0.0.0', 6001);
+                    $this->Socketrev($socket);
+                }
+            }
+        }
+        return json_encode($resulte,true);
+    }
+    
+    public function getJson($port,$password,$command){
+        switch($command){
+            case "add":
+                $json = array(
+                    'server_port' => (int)$port,
+                    'password' => $password
+                );
+                $json = 'add:'.json_encode($json,true);
+                break;
+            case "del":
+                $json = array(
+                    'server_port' => (int)$port,
+                );
+                $json = 'remove:'.json_encode($json,true);
+                break;
+        }
+        return $json;
     }
     
     public function Socketrev($socket){

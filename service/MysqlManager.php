@@ -212,7 +212,7 @@ class MysqlManager{
 
 		return true;
 	}
-
+    
     public function ManageIptableRules($ports,$type){
         foreach($ports as $res){
             switch($type){
@@ -290,7 +290,6 @@ class MysqlManager{
         $mysql = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         if(!$mysql){
             $this->getLogger()->critical("Can't connect to MYSQL Server");
-            $this->getServer()->getConsole()->Addline('stop');
         }
         foreach($in as $pp){
             $this->getLogger()->debug("Port " . $pp['port'] . " Uploaded " . $pp['transfer'] . " bytes");
@@ -308,6 +307,7 @@ class MysqlManager{
                 $this->getLogger()->critical("Update Port " . $pp['port'] . " Failed");
             }
         }
+        mysqli_close($mysql);
         return true;
     }
     
@@ -316,4 +316,13 @@ class MysqlManager{
         `$command`;
     }
     
+    public function CheckStatus(){
+        $getarray = $this->PraseIptables('input');
+        $inresults = $this->getUpdateData($getarray);
+        $getarray = $this->PraseIptables('output');
+        $otresults = $this->getUpdateData($getarray);
+        $this->ClearIptables();
+        $this->PraseMysql($inresults,$otresults);
+    }
+  
 }
