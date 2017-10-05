@@ -8,9 +8,9 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 ## The support for v2ray is in progress
 
 # Requirements:
-## 1.php5.6+(zts)
-## 2.pthread
-## 3.shadowsocks-python
+* 1.php5.6+(zts)
+* 2.pthread
+* 3.shadowsocks-python
 
 # Steps to install php-zts & pthreads
 * 0. yum install gcc libxml2 libxml2-devel
@@ -32,5 +32,5 @@ A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You c
 * sudo sh installphp.sh
 
 # Usage:
-## 1. edit config.php
-## 2. php server.php
+* 1. edit config.php
+* 2. php server.php
