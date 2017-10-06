@@ -1,6 +1,6 @@
 # shadowsocks-mysql-manager
 A manager for shadowsocks using mysql(like shadowsocks’s manyuser branch(You can use shadowsocks-libev now
-
+## This manager is suitable for UnlimitedSocks,whmcs-shadowsocks-plugin,sspanel
 ## Progress 30%
 ## Please edit the config in config.php first
 
